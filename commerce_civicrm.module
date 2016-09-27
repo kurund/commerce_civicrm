@@ -256,18 +256,13 @@ function commerce_civicrm_display_contact_transactions($customer, $count = FALSE
     return;
   }
 
-  $path = drupal_get_path('module', 'commerce_civicrm');
-
   if ($count) {
     return _commerce_civicrm_count_customer_orders($customer);
   }
 
   $view = views_get_view('commerce_civicrm_orders_by_user');
-  $output = $view->execute_display('default', array($customer->uid));
-
-  CRM_Core_Page_AJAX::returnJsonResponse($script . $output);
-  //print render($output);
-  //return;
+  $output =  $view->execute_display('default', array($customer->uid));
+  CRM_Core_Page_AJAX::returnJsonResponse($output);
 }
 
 
