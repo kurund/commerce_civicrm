@@ -296,12 +296,13 @@ function commerce_civicrm_admin() {
   }
 
   $form = array();
-  $form['commerce_civicrm_contribution_type'] = array(
+  $form['commerce_civicrm_financial_type'] = array(
     '#type' => 'select',
-    '#title' => t('Contribution type'),
-    '#default_value' => variable_get('commerce_civicrm_contribution_type', array()),
+    '#title' => t('Financial type'),
+    '#default_value' => variable_get('commerce_civicrm_financial_type', array()),
     '#options' => $types,
-    '#description' => t('Select a contribution type for purchases, making a new type with a name like "Drupal purchase" is recommended.'),
+    '#required' => TRUE,
+    '#description' => t('Select a financial type for purchases, making a new type with a name like "Drupal purchase" is recommended.'),
   );
 
   $form['commerce_civicrm_groups'] = array(
@@ -694,7 +695,7 @@ function _commerce_civicrm_add_contribution($cid, $order, $transaction) {
     'contact_id' => $cid,
     'receive_date' => date('Y-m-d h:i:s'),
     'total_amount' => $total_amount,
-    'financial_type_id' => variable_get('commerce_civicrm_contribution_type', ''),
+    'financial_type_id' => variable_get('commerce_civicrm_financial_type', ''),
     // @FIXME this needs a sensible default
     'payment_instrument_id' => _commerce_civicrm_map_payment_instrument($transaction->payment_method),
     'non_deductible_amount' => 00.00,
