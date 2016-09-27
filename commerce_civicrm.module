@@ -307,6 +307,7 @@ function commerce_civicrm_display_contact_transactions($customer, $count = FALSE
   }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   $output = _commerce_civicrm_display_customer_orders($customer);
   if ($render) {
     print render($output);
@@ -319,17 +320,24 @@ function commerce_civicrm_display_contact_transactions($customer, $count = FALSE
 =======
   $path = drupal_get_path('module', 'commerce_civicrm');
 
+=======
+>>>>>>> 237638b... fixed the purchases tab
   if ($count) {
     return _commerce_civicrm_count_customer_orders($customer);
   }
 
   $view = views_get_view('commerce_civicrm_orders_by_user');
+<<<<<<< HEAD
   $output = $view->execute_display('default', array($customer->uid));
 
   CRM_Core_Page_AJAX::returnJsonResponse($script . $output);
   //print render($output);
   //return;
 >>>>>>> e4b2f57... initial commit after upgrade
+=======
+  $output =  $view->execute_display('default', array($customer->uid));
+  CRM_Core_Page_AJAX::returnJsonResponse($output);
+>>>>>>> 237638b... fixed the purchases tab
 }
 
 
