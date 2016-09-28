@@ -90,36 +90,50 @@ function commerce_civicrm_menu() {
 /**
  * Implements hook_civicrm_links().
  *
- * Add a 'create order' link to the actions dropdown on a CiviCRM contact screen.
+ * Add a 'create order' link to the actions menu on a CiviCRM contact summary and contact listing.
  *
  * @param $op
  * @param $objectname
  * @param $objectid
+ * @param $links
+ * @param $mask
+ * @param $values
+ *
  * @return array
  */
-function commerce_civicrm_civicrm_links($op, $objectname, $objectid) {
-  civicrm_initialize();
+function commerce_civicrm_civicrm_links($op, $objectname, $objectId, &$links, &$mask, &$values) {
+  // FIX ME
+  // currently there is no way to open link in another window in CiviCRM for actions
+  // below code is working and functional, but for now returning early
+  return $links;
+
+  // only call this contact summary
+  $contact_actions = array(
+    'view.contact.activity',
+    'contact.selector.row',
+  );
+
+  if (!in_array($op, $contact_actions)) {
+    return $links;
+  }
+
   global $base_url;
-  $links = array();
-  $uid = '';
-  $cid = $_GET['cid'];
-  if ($cid && is_numeric($cid)) {
-    // Get the Drupal uid for the CiviCRM contact if there is a match
-    $params = array('contact_id' => $cid, 'version' => 3, 'sequential' => 1);
-    $uf_match = civicrm_api3('uf_match', 'get', $params);
-    if (!empty($uf_match['id']) && count($uf_match['values'] == 1)) {
-      $uid = $uf_match['id'];
-    }
+  // Get the Drupal uid for the CiviCRM contact if there is a match
+  $params = array('contact_id' => $objectId, 'version' => 3, 'sequential' => 1);
+  $uf_match = civicrm_api3('uf_match', 'get', $params);
+  if (!empty($uf_match['id']) && count($uf_match['values']) == 1) {
+    $uid = $uf_match['values'][0]['uf_id'];
     switch ($objectname) {
       case 'Contact':
         $links[] = array(
-          'title' => t('Add new Drupal Commerce order for this contact'),
-          'url' => $base_url . '/admin/commerce/orders/add/' . $uid . '?cid=' . $cid,
-          'weight' => 10,
+          'name' => ts('Add Store Order'),
+          //'title' => ts('Add Store Order'),
+          'url' => $base_url . '/admin/commerce/orders/add/' . $uid . '?cid=' . $objectId,
         );
         break;
     }
   }
+
   return $links;
 }
 
