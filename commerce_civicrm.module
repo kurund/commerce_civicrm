@@ -1084,7 +1084,6 @@ function _commerce_civicrm_add_contribution($cid, $order, $transaction) {
   $params = array(
     'version' => 3,
     'contact_id' => $cid,
-    'receive_date' => date('Y-m-d h:i:s'),
     'total_amount' => $total_amount,
     'financial_type_id' => variable_get('commerce_civicrm_financial_type', ''),
     // @FIXME this needs a sensible default
