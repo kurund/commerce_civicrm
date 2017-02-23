@@ -17,13 +17,6 @@ function commerce_civicrm_help($path = 'admin/help#commerce_civicrm') {
   }
 }
 
-<<<<<<< HEAD
-
-/**
- * Implements hook_civicrm_tabs().
- */
-function commerce_civicrm_civicrm_tabs(&$tabs, $cid) {
-=======
 /**
  * Implements hook_views_api().
  */
@@ -42,27 +35,18 @@ function commerce_civicrm_views_api() {
  */
 
 function commerce_civicrm_civicrm_tabset($tabsetname, &$tabs, $context) {
->>>>>>> e4b2f57... initial commit after upgrade
   if (!civicrm_initialize()) {
     return;
   }
 
-<<<<<<< HEAD
-=======
   $cid = $context['contact_id'];
->>>>>>> e4b2f57... initial commit after upgrade
   $uid = CRM_Core_BAO_UFMatch::getUFId($cid);
   if (empty($uid)) {
     return;
   }
 
   $customer = user_load($uid);
-<<<<<<< HEAD
-  $history = commerce_civicrm_display_contact_transactions($customer, FALSE);
-  $count = count($history['orders']['#rows']);
-=======
   $count = commerce_civicrm_display_contact_transactions($customer, TRUE);
->>>>>>> e4b2f57... initial commit after upgrade
 
   $tab = array(
     'id' => 'purchases',
@@ -72,16 +56,10 @@ function commerce_civicrm_civicrm_tabset($tabsetname, &$tabs, $context) {
   );
 
   if ($count > 0) {
-<<<<<<< HEAD
-    $tab['url'] = url('admin/commerce/civicrm/customer/orders/' . $uid);
-  }
-  $tabs[] = $tab;
-=======
     $tab['url'] = url('civicrm/customer/orders/' . $uid);
   }
   $tabs[] = $tab;
 
->>>>>>> e4b2f57... initial commit after upgrade
 }
 
 
@@ -89,31 +67,13 @@ function commerce_civicrm_civicrm_tabset($tabsetname, &$tabs, $context) {
  * Implements hook_menu().
  */
 function commerce_civicrm_menu() {
-<<<<<<< HEAD
-<<<<<<< HEAD
-  $items['admin/commerce/civicrm/customer/orders/%user'] = array(
-    'title'            => 'CiviCRM',
-    'page callback'    => 'commerce_civicrm_display_contact_transactions',
-    'page arguments'   => array(5),
-    'access arguments' => array('administer CiviCRM'),
-    'type'             => MENU_CALLBACK,
-  );
-
-=======
-   $items['civicrm/customer/orders/%user'] = array(
-    'title'            => 'CiviCRM',
-    'page callback'    => 'commerce_civicrm_display_contact_transactions',
-    'page arguments'   => array(3),
-=======
   $items['civicrm/customer/orders/%user'] = array(
     'title' => 'CiviCRM',
     'page callback' => 'commerce_civicrm_display_contact_transactions',
     'page arguments' => array(3),
->>>>>>> a7d3041... code cleanup
     'access arguments' => array('view all contacts'),
     'type' => MENU_CALLBACK,
   );
->>>>>>> e4b2f57... initial commit after upgrade
   $items['admin/commerce/config/civicrm'] = array(
     'title' => 'CiviCRM',
     'description' => 'Configure Drupal Commerce and CiviCRM integration',
@@ -128,8 +88,6 @@ function commerce_civicrm_menu() {
 
 
 /**
-<<<<<<< HEAD
-=======
  * Implements hook_civicrm_links().
  *
  * Add a 'create order' link to the actions menu on a CiviCRM contact summary and contact listing.
@@ -300,58 +258,25 @@ function commerce_civicrm_prefill_order_form_with_civi_data(&$form, &$form_state
 
 
 /**
->>>>>>> e4b2f57... initial commit after upgrade
  * Display order information in a CiviCRM tab.
  *
  * @param $customer
  *   Drupal user object for the customer
-<<<<<<< HEAD
- * @param $render
- *   If true, render the output and print it to the screen.
- */
-function commerce_civicrm_display_contact_transactions($customer, $render = TRUE) {
-=======
  * @param $count
  *   If true, just return the number of purchases.
  */
 function commerce_civicrm_display_contact_transactions($customer, $count = FALSE) {
->>>>>>> e4b2f57... initial commit after upgrade
   if (!civicrm_initialize()) {
     return;
   }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-  $output = _commerce_civicrm_display_customer_orders($customer);
-  if ($render) {
-    print render($output);
-  }
-  else {
-    return $output;
-  }
-
-  return;
-=======
-  $path = drupal_get_path('module', 'commerce_civicrm');
-
-=======
->>>>>>> 237638b... fixed the purchases tab
   if ($count) {
     return _commerce_civicrm_count_customer_orders($customer);
   }
 
   $view = views_get_view('commerce_civicrm_orders_by_user');
-<<<<<<< HEAD
-  $output = $view->execute_display('default', array($customer->uid));
-
-  CRM_Core_Page_AJAX::returnJsonResponse($script . $output);
-  //print render($output);
-  //return;
->>>>>>> e4b2f57... initial commit after upgrade
-=======
   $output =  $view->execute_display('default', array($customer->uid));
   CRM_Core_Page_AJAX::returnJsonResponse($output);
->>>>>>> 237638b... fixed the purchases tab
 }
 
 
@@ -362,22 +287,6 @@ function commerce_civicrm_admin() {
   if (!civicrm_initialize()) {
     return;
   }
-<<<<<<< HEAD
-  require_once 'api/v2/Group.php';
-  require_once 'CRM/Core/Config.php';
-
-  $params = array();
-  $groups = civicrm_group_get($params);
-  $options = array();
-  foreach ($groups as $group) {
-    $options[$group['id']] = $group['title'];
-  }
-  natsort(&$options);
-
-  // Get contribution types.
-  // Note, no {} on table name because it's in civicrm db.
-  $sql = "SELECT id, name FROM civicrm_contribution_type WHERE is_active = 1";
-=======
   require_once 'api/v3/Group.php';
   require_once 'CRM/Core/Config.php';
 
@@ -394,7 +303,6 @@ function commerce_civicrm_admin() {
   // Get contribution types.
   // Note, no {} on table name because it's in civicrm db.
   $sql = "SELECT id, name FROM civicrm_financial_type WHERE is_active = 1";
->>>>>>> e4b2f57... initial commit after upgrade
   $dao =& CRM_Core_DAO::executeQuery($sql, array());
   $types = array(0 => t('Select a type...'));
   while ($dao->fetch()) {
@@ -430,33 +338,10 @@ function commerce_civicrm_admin() {
  *   the order
  */
 function commerce_civicrm_action_order_civicrm($order) {
-<<<<<<< HEAD
-  global $user;
-
-=======
->>>>>>> e4b2f57... initial commit after upgrade
   if (!civicrm_initialize()) {
     return;
   }
 
-<<<<<<< HEAD
-  require_once 'CRM/Core/BAO/UFMatch.php';
-  require_once 'api/v2/Contact.php';
-
-  // Find or create a CiviCRM contact ID for the customer.
-  $cid = _commerce_civicrm_get_cid($order);
-  if ($cid === FALSE) {
-    return;
-  }
-
-  $cid = _commerce_civicrm_add_update_contact($cid, $order);
-  if ($cid === FALSE) {
-    return;
-  }
-
-  // Add the contribution record.
-  _commerce_civicrm_add_contribution($cid, $order);
-=======
   // Find or create a CiviCRM contact ID for the customer.
   $cid = _commerce_civicrm_get_cid($order);
   if (!$cid) {
@@ -468,14 +353,11 @@ function commerce_civicrm_action_order_civicrm($order) {
 
   // Update the contact.
   _commerce_civicrm_update_contact($cid, $order);
->>>>>>> e4b2f57... initial commit after upgrade
 
   // Add this contact to selected groups.
   _commerce_civicrm_add_to_groups($cid);
 }
 
-<<<<<<< HEAD
-=======
 // TODO we really need to be able to specify which fields are email fields.
 // This is critical for creating contacts in Civi.
 function _commerce_civicrm_get_mail_from_order($order) {
@@ -490,7 +372,6 @@ function _commerce_civicrm_get_mail_from_order($order) {
   }
 
 }
->>>>>>> e4b2f57... initial commit after upgrade
 
 /**
  * Add contact to any specified groups.
@@ -499,11 +380,7 @@ function _commerce_civicrm_get_mail_from_order($order) {
  *   CRM_Contact_BAO_Group object describing the contact to add
  */
 function _commerce_civicrm_add_to_groups($cid) {
-<<<<<<< HEAD
-  require_once 'api/v2/GroupContact.php';
-=======
   require_once 'api/v3/GroupContact.php';
->>>>>>> e4b2f57... initial commit after upgrade
 
   $groups = variable_get('commerce_civicrm_groups', '');
   if (empty($groups)) {
@@ -513,11 +390,7 @@ function _commerce_civicrm_add_to_groups($cid) {
   foreach ($groups as $id => $key) {
     if ($key != 0) {
       $params = array('contact_id' => $cid, 'group_id' => $key);
-<<<<<<< HEAD
-      $result = civicrm_group_contact_add($params);
-=======
       $result = civicrm_api3('GroupContact', 'create', $params);
->>>>>>> e4b2f57... initial commit after upgrade
       if (!empty($result['is_error'])) {
         watchdog('commerce_civicrm', 'Error adding contact to group: %error', array('%error' => $result['error_message']), WATCHDOG_ERROR);
       }
@@ -536,12 +409,6 @@ function _commerce_civicrm_add_to_groups($cid) {
  *                 integer => CID if non-zero; must create if zero
  */
 function _commerce_civicrm_get_cid($order) {
-<<<<<<< HEAD
-  // Logged in user.
-  if ($order->uid) {
-    global $user;
-    $match = CRM_Core_BAO_UFMatch::synchronizeUFMatch($user, $order->uid, $order->mail, 'Drupal', FALSE, 'Individual');
-=======
   if (!civicrm_initialize()) {
     return;
   }
@@ -559,12 +426,7 @@ function _commerce_civicrm_get_cid($order) {
   // Logged in user.
   if ($order->uid) {
     global $user;
-<<<<<<< HEAD
-    $match = CRM_Core_BAO_UFMatch::synchronizeUFMatch($user, $order->uid,  $mail, 'Drupal', FALSE, 'Individual');
->>>>>>> e4b2f57... initial commit after upgrade
-=======
     $match = CRM_Core_BAO_UFMatch::synchronizeUFMatch($user, $order->uid, $mail, 'Drupal', FALSE, 'Individual');
->>>>>>> a7d3041... code cleanup
     if (!is_object($match)) {
       return FALSE;
     }
@@ -572,23 +434,6 @@ function _commerce_civicrm_get_cid($order) {
   }
 
   // Anonymous user.
-<<<<<<< HEAD
-  // Look in the CiviCRM contacts table for a contact that matches the primary email.
-  $params = array('email' => $order->mail, 'return.contact_id' => TRUE);
-  $contact = civicrm_contact_search($params);
-  if (!empty($contact['is_error'])) {
-    watchdog('commerce_civicrm', 'civicrm_contact_search(): %error', array('%error' => $contact['error_message']), WATCHDOG_ERROR);
-    return FALSE;
-  }
-
-  // No matches found, so we will need to create a contact.
-  if (count($contact) == 0) {
-    return 0;
-  }
-  $cid = array_shift($contact);
-
-  return $cid;
-=======
   // Try to find a match based on email.
   $contact_search_results = civicrm_api3('Contact', 'get', array(
     'email' => $mail,
@@ -616,39 +461,10 @@ function _commerce_civicrm_get_cid($order) {
       }
       return 0;
   }
->>>>>>> e4b2f57... initial commit after upgrade
 }
 
 
 /**
-<<<<<<< HEAD
- *  Add or update contact information.
- */
-function _commerce_civicrm_add_update_contact($cid, $order) {
-  require_once 'api/v2/Location.php';
-
-  $contact = array();
-
-  if ($cid != 0) {
-    $params = array(
-      'contact_id' => $cid,
-      'return.contact_id'        => 1,
-      'return.contact_source'    => 1,
-    );
-    $contact = civicrm_contact_search($params);
-    if (!empty($contact['is_error'])) {
-      watchdog('commerce_civicrm', 'civicrm_contact_search(): %error', array('%error' => $contact['error_message']), WATCHDOG_ERROR);
-      return FALSE;
-    }
-    $contact = array_shift($contact);
-    $contact['contact_id'] = $cid;
-    if (!empty($contact['contact_source'])) {
-      $contact['source']     = $contact['contact_source'];
-    }
-    unset($contact['contact_source']);
-  }
-
-=======
  * Update contact information.
  * @params $cid int CiviCRM contact id
  * @params $order Drupal order object
@@ -670,7 +486,6 @@ function _commerce_civicrm_update_contact($cid, $order) {
   $result = civicrm_api3('Contact', 'get', array('id' => $cid, 'version' => 3, 'sequential' => 1));
   $contact = $result['values'][0];
 
->>>>>>> e4b2f57... initial commit after upgrade
   // Get customer profile information.
   $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
   $billing_profile = $order_wrapper->commerce_customer_billing->value();
@@ -679,10 +494,7 @@ function _commerce_civicrm_update_contact($cid, $order) {
 
   // If we have a full name field, split it.
   if (!empty($billing_address['name_line'])) {
-<<<<<<< HEAD
-=======
     $contact['display_name'] = $billing_address['name_line'];
->>>>>>> e4b2f57... initial commit after upgrade
     // Assumes user only has one first name and one surname... not ideal.
     $names = preg_split('/\s+/', $billing_address['name_line'], 2);
     $first_name = $names[0];
@@ -692,10 +504,7 @@ function _commerce_civicrm_update_contact($cid, $order) {
   else {
     $first_name = $billing_address['first_name'];
     $last_name = $billing_address['last_name'];
-<<<<<<< HEAD
-=======
     $contact['display_name'] = $first_name . ' ' . $last_name;
->>>>>>> e4b2f57... initial commit after upgrade
   }
 
   // Prepare array to update contact via Civi API.
@@ -703,78 +512,6 @@ function _commerce_civicrm_update_contact($cid, $order) {
   $contact['first_name'] = $first_name;
   $contact['sort_name'] = "{$last_name}, {$first_name}";
   $contact['display_name'] = $billing_address['first_name'] . ' ' . $billing_address['last_name'];
-<<<<<<< HEAD
-  $contact['contact_type'] = 'Individual';
-  $contact['email'] = $order->mail;
-  if (empty($contact['source'])) {
-    $contact['source'] = 'Drupal Commerce purchase';
-  }
-
-  // Create contact or update existing contact.
-  $result = civicrm_contact_add($contact);
-  if (!empty($result['is_error'])) {
-    watchdog('commerce_civicrm', 'civicrm_contact_add(): %error', array('%error' => $rc['error_message']), WATCHDOG_ERROR);
-    return FALSE;
-  }
-
-  // Billing location.
-  $address = array(
-    1 => array(
-      'location_type'          => 'Billing',
-      'is_primary'             => TRUE,
-      'city'                   => $billing_address['locality'],
-      'state_province'         => $billing_address['administrative_area'],
-      'postal_code'            => $billing_address['postal_code'],
-      'street_address'         => $billing_address['thoroughfare'],
-      'supplemental_address_1' => $billing_address['premise'],
-      'country'                => $billing_address['country'],
-    )
-  );
-
-  // Phone - TODO: where to get this information?
-  //$phone = array();
-  //$phone = array(
-  //  'phone' => $phone_number,
-  //  'is_primary' => TRUE,
-  //  'phone_type_id' => 1,
-  //  'location_type' => 'Home',
-  //);
-  //$phones = array($phone);
-
-  // Add / update the location.
-  //$params = array('version' => '3.0', 'contact_id' => $cid, 'phone' => $phones, 'address' => $address);
-  $params = array('version' => '3.0', 'contact_id' => $cid, 'address' => $address);
-  $new_location = civicrm_location_update($params);
-  if ($new_location['is_error'] && strpos($new_location['error_message'], "Invalid Location Type(s)") !== FALSE) {
-    $new_location = civicrm_location_add($params);
-  }
-
-  // Check if we have shipping information.
-  if (!empty($order_wrapper->commerce_customer_shipping)) {
-    $shipping_profile = $order_wrapper->commerce_customer_shipping->value();
-    $shipping_profile_wrapper = entity_metadata_wrapper('commerce_customer_profile', $shipping_profile);
-    $shipping_address = $shipping_profile_wrapper->commerce_customer_address->value();
-
-    // Shipping location.
-    $address = array(
-      1 => array(
-        'location_type'          => 'Home',
-        'is_primary'             => TRUE,
-        'city'                   => $shipping_address['locality'],
-        'state_province'         => $shipping_address['administrative_area'],
-        'postal_code'            => $shipping_address['postal_code'],
-        'street_address'         => $shipping_address['thoroughfare'],
-        'supplemental_address_1' => $shipping_address['premise'],
-        'country'                => $shipping_address['country'],
-      )
-    );
-
-    // Add / update the location.
-    $params = array('version' => '3.0', 'contact_id' => $cid, 'address' => $address);
-    $new_location = civicrm_location_update($params);
-    if ($new_location['is_error'] && strpos($new_location['error_message'], "Invalid Location Type(s): Shipping") !== FALSE) {
-      $new_location = civicrm_location_add($params);
-=======
   $contact['email'] = _commerce_civicrm_get_mail_from_order($order);
   if (empty($contact['source'])) {
     $contact['source'] = t('Drupal Commerce purchase');
@@ -839,37 +576,18 @@ function _commerce_civicrm_update_contact($cid, $order) {
 
     if ($new_location['is_error'] && strpos($new_location['error_message'], "Invalid Location Type(s) : Home") !== FALSE) {
       $new_location = civicrm_api3_address_create($params);
->>>>>>> e4b2f57... initial commit after upgrade
     }
   }
 
   // Log the error, but continue.
   if (civicrm_error($new_location)) {
-<<<<<<< HEAD
-    watchdog('commerce_civicrm', 'civicrm_location_update(): %error', array('%error' => $new_location['error_message']), WATCHDOG_ERROR);
-  }
-
-  return $cid;
-=======
     watchdog('commerce_civicrm', 'civicrm_api3_address_create(): %error', array('%error' => $new_location['error_message']), WATCHDOG_ERROR);
   }
->>>>>>> e4b2f57... initial commit after upgrade
 }
 
 
 /**
  * Creates required contribution fields if they have not already been created.
-<<<<<<< HEAD
- */
-function _commerce_civicrm_create_custom_contribution_fields() {
-  $group_id = variable_get('commerce_civicrm_contribution_group_id', FALSE);
-  if ($group_id != FALSE) {
-    return;
-  }
-
-  require_once 'CRM/Core/Config.php';
-  require_once 'api/v2/CustomGroup.php';
-=======
  * This function will get call only once when this module get installed
  */
 function _commerce_civicrm_create_custom_contribution_fields() {
@@ -882,40 +600,20 @@ function _commerce_civicrm_create_custom_contribution_fields() {
   }
   require_once 'CRM/Core/Config.php';
   require_once 'api/v3/CustomGroup.php';
->>>>>>> e4b2f57... initial commit after upgrade
 
   // First we need to check if the Sales Tax and Shipping custom fields have
   // already been created.
   $params = array(
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-    
->>>>>>> e4b2f57... initial commit after upgrade
-    'title'            => 'Drupal Commerce Purchases',
-    'name'             => 'commerce_purchases',
-    'extends'          => array('Contribution'),
-    'weight'           => 1,
-=======
 
     'title' => 'Drupal Commerce Purchases',
     'name' => 'commerce_purchases',
     'extends' => array('Contribution'),
     'weight' => 1,
->>>>>>> a7d3041... code cleanup
     'collapse_display' => 0,
     'is_active' => 1,
   );
-<<<<<<< HEAD
-<<<<<<< HEAD
-  $custom_group = civicrm_custom_group_create($params);
-=======
-  
-=======
 
->>>>>>> a7d3041... code cleanup
   $custom_group = civicrm_api3('CustomGroup', 'create', $params);
->>>>>>> e4b2f57... initial commit after upgrade
   variable_set('commerce_civicrm_contribution_group_id', $custom_group['id']);
 
   $params = array(
@@ -928,13 +626,8 @@ function _commerce_civicrm_create_custom_contribution_fields() {
     'is_searchable' => 0,
     'is_active' => 1,
   );
-<<<<<<< HEAD
-  $tax_field = civicrm_custom_field_create($params);
-  variable_set('commerce_civicrm_tax_field_id', $tax_field['result']['customFieldId']);
-=======
   $tax_field = civicrm_api3('CustomField', 'create', $params);
   variable_set('commerce_civicrm_tax_field_id', $tax_field['id']);
->>>>>>> e4b2f57... initial commit after upgrade
 
   $params = array(
     'custom_group_id' => $custom_group['id'],
@@ -946,76 +639,6 @@ function _commerce_civicrm_create_custom_contribution_fields() {
     'is_searchable' => 0,
     'is_active' => 1,
   );
-<<<<<<< HEAD
-  $shipping_field = civicrm_custom_field_create($params);
-  variable_set('commerce_civicrm_shipping_field_id', $shipping_field['result']['customFieldId']);
-}
-
-
-/**
- * Add a contribution record.
- *
- * Create any custom fields and get the transaction id. If it doesn't exist,
- * make one up and add the contribution.
- */
-function _commerce_civicrm_add_contribution($cid, &$order) {
-  _commerce_civicrm_create_custom_contribution_fields();
-
-  $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
-
-  // TODO: how to handle multiple transactions on one order?
-  $transactions = commerce_payment_transaction_load_multiple(array(), array('order_id' => $order->order_id));
-  $transaction = array_pop($transactions);
-  if (empty($transaction)) {
-    $txn_id = time() . '_' . rand(1000, 9999); 
-  }
-  else {
-    $txn_id = $transaction->transaction_id;
-  }
-
-  $total = $order_wrapper->commerce_order_total->amount->value();
-  $order_total = $total / 100;
-
-  $tax_field_id = variable_get('commerce_civicrm_tax_field_id', '');
-  $shipping_field_id = variable_get('commerce_civicrm_shipping_field_id', '');
-  $tax_total = 0;
-  $shipping_total = 0;
-
-  // Get the tax total.
-  if (module_exists('commerce_tax')) {
-    $components = $order_wrapper->commerce_order_total->data->value();
-    $tax_total = commerce_tax_total_amount($components['components'], TRUE, commerce_default_currency()) / 100;
-  }
-
-  // TODO: figure out where to get the shipping total from.
-
-  if (!empty($order_wrapper->data)) {
-    $payment_instrument_id = _commerce_civicrm_map_payment_instrument($order_wrapper->data['payment_method']);
-  }
-  else {
-    $payment_instrument_id = _commerce_civicrm_map_payment_instrument('credit');
-  }
-
-  $notes = _commerce_civicrm_create_detail_string($order_wrapper);
-  $params = array(
-    'contact_id' => $cid,
-    'receive_date' => date('Ymd'),
-    'total_amount' => $order_total,
-    'contribution_type_id' => variable_get('commerce_civicrm_contribution_type', ''), // @FIXME this needs a sensible default
-    'payment_instrument_id' => $payment_instrument_id,
-    'non_deductible_amount' => 00.00,
-    'fee_amount' => 00.00,
-    'net_amount' => $order_total,
-    'trxn_id' => $txn_id,
-    'invoice_id' => $order->order_id . '_dc',
-    'source' => $notes,
-    'contribution_status_id' => _commerce_civicrm_map_contribution_status($order->status),
-    'note' => $notes,
-  );
-  if (!empty($tax_field_id)) {
-    $params['custom_' . $tax_field_id] = $tax_total;
-  }
-=======
   $shipping_field = civicrm_api3('CustomField', 'create', $params);
   variable_set('commerce_civicrm_shipping_field_id', $shipping_field['id']);
 }
@@ -1102,25 +725,10 @@ function _commerce_civicrm_add_contribution($cid, $order, $transaction) {
     $params['custom_' . $tax_field_id] = $transaction_tax;
   }
 
->>>>>>> e4b2f57... initial commit after upgrade
   if (!empty($shipping_field_id)) {
     $params['custom_' . $shipping_field_id] = $shipping_total;
   }
 
-<<<<<<< HEAD
-  require_once 'api/v2/Contribute.php';
-  $contribution = civicrm_contribution_add($params);
-
-  // Log the error, but continue.
-  if (civicrm_error($contribution)) {
-    watchdog('commerce_civicrm', 'civicrm_contribution_add(): %error', array('%error' => $contribution['error_message']), WATCHDOG_ERROR);
-  }
-
-  return TRUE;
-}
-
-
-=======
   // Allow other modules to alter the contribution data before being sent to CiviCRM.
   foreach (module_implements('commerce_civicrm_contribution_params') as $module) {
     $function = $module . '_commerce_civicrm_contribution_params';
@@ -1136,11 +744,6 @@ function _commerce_civicrm_add_contribution($cid, $order, $transaction) {
 }
 
 
-<<<<<<< HEAD
-
->>>>>>> e4b2f57... initial commit after upgrade
-=======
->>>>>>> a7d3041... code cleanup
 /**
  * Maps a Drupal Commerce payment method to a CiviCRM payment instrument.
  *
@@ -1150,37 +753,20 @@ function _commerce_civicrm_add_contribution($cid, $order, $transaction) {
  *    The CiviCRM id of the payment processor
  */
 function _commerce_civicrm_map_payment_instrument($payment_method) {
-<<<<<<< HEAD
-  // TODO: not sure where to get this info, defaulting everything to 'credit'.
-  $payment_method = 'credit';
-
-  $map = array(
-    'credit' => 1,
-    'cod'    => 3,
-    'check'  => 4,
-=======
 
   // TODO add support for other payment processors.
   $map = array(
     'credit' => 1,
     'commerce_sagepay' => 1,
     'commerce_cheque' => 2,
-<<<<<<< HEAD
-    'cod'    => 4,
->>>>>>> e4b2f57... initial commit after upgrade
-=======
     'cod' => 4,
->>>>>>> a7d3041... code cleanup
   );
 
   if (array_key_exists($payment_method, $map)) {
     $id = $map[$payment_method];
   }
   else {
-<<<<<<< HEAD
-=======
     // TODO add watchdog for missing payment processors?
->>>>>>> e4b2f57... initial commit after upgrade
     $id = 1;
   }
 
@@ -1191,31 +777,11 @@ function _commerce_civicrm_map_payment_instrument($payment_method) {
 /**
  * Maps a Drupal Commerce order status to a corresponding CiviCRM contribution status.
  *
-<<<<<<< HEAD
- * @param string $order_status
-=======
  * @param string $transaction_status
->>>>>>> e4b2f57... initial commit after upgrade
  *    A Drupal Commerce order status
  * @return int
  *    A CiviCRM order status
  */
-<<<<<<< HEAD
-function _commerce_civicrm_map_contribution_status($order_status) {
-  // NOTE: There may be a more 'correct' way to do this.
-  $map = array(
-    'completed'         => 1,
-    'payment_received'  => 1,
-    'pending'           => 2,
-    'canceled'          => 3,
-    'cart'              => 5,
-    'checkout_checkout' => 5,
-    'checkout_review'   => 5,
-  );
-
-  if (array_key_exists($order_status, $map)) {
-    $id = $map[$order_status];
-=======
 function _commerce_civicrm_map_contribution_status($transaction_status) {
   // NOTE: There may be a more 'correct' way to do this.
   $map = array(
@@ -1226,16 +792,11 @@ function _commerce_civicrm_map_contribution_status($transaction_status) {
 
   if (array_key_exists($transaction_status, $map)) {
     $id = $map[$transaction_status];
->>>>>>> e4b2f57... initial commit after upgrade
   }
   // No status mapping found.
   else {
     $id = 1;
-<<<<<<< HEAD
-    watchdog('commerce_civicrm', 'There is no status that maps to %status marking as "Complete"', array('%status' => $order_status), WATCHDOG_WARNING);
-=======
     watchdog('commerce_civicrm', 'There is no status that maps to %status marking as "Complete"', array('%status' => $transaction_status), WATCHDOG_WARNING);
->>>>>>> e4b2f57... initial commit after upgrade
   }
 
   return $id;
@@ -1267,10 +828,6 @@ function _commerce_civicrm_create_detail_string($order_wrapper) {
         $titles[$title] += $quantity;
       }
     }
-<<<<<<< HEAD
-    
-=======
->>>>>>> e4b2f57... initial commit after upgrade
   }
 
   // Display the product titles and the number purchased.
@@ -1285,106 +842,12 @@ function _commerce_civicrm_create_detail_string($order_wrapper) {
   return $str;
 }
 
-<<<<<<< HEAD
-// TODO
-/**
- * Displays a list of orders made by a customer.
-=======
 /**
  * Count number of orders made by a customer.
->>>>>>> e4b2f57... initial commit after upgrade
  *
  * @param $customer
  *   The user object for the customer.
  */
-<<<<<<< HEAD
-function _commerce_civicrm_display_customer_orders($customer) {
-  $result = db_select('commerce_order')->extend('PagerDefault')
-    ->fields('commerce_order', array('order_id'))
-    ->condition('uid', $customer->uid)
-    ->orderBy('created', 'DESC')
-    ->limit(50)
-    ->execute();
-  $order_ids = $result->fetchCol();
-  $orders = commerce_order_load_multiple($order_ids);
-
-  $header = array(t('Order ID'), t('Date'), t('Billing name'),
-                  t('Shipping name'), t('Items'), t('Total'), t('Operations'));
-  $rows = array();
-  $totals = array('orders' => 0, 'items' => 0, 'total' => 0);
-  foreach ($orders as $order) {
-    $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
-
-    // Get billing details.
-    $billing_profile = $order_wrapper->commerce_customer_billing->value();
-    $billing_profile_wrapper = entity_metadata_wrapper('commerce_customer_profile', $billing_profile);
-    $billing_address = $billing_profile_wrapper->commerce_customer_address->value();
-    $billing_name = (empty($billing_address['name_line']) ? $billing_address['first_name'] . ' ' . $billing_address['last_name'] : $billing_address['name_line']);
-
-    // Get shipping details.
-    $shipping_name = '';
-    if (!empty($order_wrapper->commerce_customer_shipping)) {
-      $shipping_profile = $order_wrapper->commerce_customer_shipping->value();
-      $shipping_profile_wrapper = entity_metadata_wrapper('commerce_customer_profile', $shipping_profile);
-      $shipping_address = $shipping_profile_wrapper->commerce_customer_address->value();
-      $shipping_name = (empty($shipping_address['name_line']) ? $shipping_address['first_name'] . ' ' . $shipping_address['last_name'] : $shipping_address['name_line']);
-    }
-
-    $operations = l('View', 'admin/commerce/orders/' . $order->order_id);
-    $operations .= ' ';
-    $operations .= l('Edit', 'admin/commerce/orders/' . $order->order_id . '/edit');
-
-    // Update summary stats.
-    $quantity = 0;
-    if (!empty($order_wrapper->commerce_line_items)) {
-      $quantity = commerce_line_items_quantity($order_wrapper->commerce_line_items, commerce_product_line_item_types());
-    }
-    $totals['items'] += $quantity;
-    $totals['orders'] += 1;
-
-    // Order total.
-    $currency = $order_wrapper->commerce_order_total->currency_code->value();
-    $total = $order_wrapper->commerce_order_total->amount->value();
-    $totals['total'] += $total;
-
-    $rows[] = array(
-      'data' => array(
-        array('data' => $order->order_id),
-        array('data' => format_date($order->created)),
-        array('data' => check_plain($billing_name)),
-        array('data' => check_plain($shipping_name)),
-        array('data' => $quantity),
-        array('data' => commerce_currency_format($total, $currency)),
-        array('data' => $operations),
-      ),
-      'id' => 'order-' . $order->order_id,
-    );
-  }
-
-  $build = array();
-
-  $build['description'] = array(
-    '#markup' => '<p>' . t('!totals_orders orders shown match that account with !totals_items items purchased and !totals_total spent:', array(
-      '!totals_orders' => $totals['orders'],
-      '!totals_items' => $totals['items'],
-      '!totals_total' => commerce_currency_format($totals['total'], $currency),
-    )) . '</p>',
-    '#weight' => -5,
-  );
-  $build['orders'] = array(
-    '#theme' => 'table',
-    '#header' => $header,
-    '#rows' => $rows,
-    '#attributes' => array('width' => '100%', 'class' => array('commerce-cust-orders-table')),
-    '#empty' => t('No orders found.'),
-  );
-  $build['pager'] = array(
-    '#theme' => 'pager',
-    '#weight' => 5,
-  );
-
-  return $build;
-=======
 function _commerce_civicrm_count_customer_orders($customer) {
   $count = db_select('commerce_order')
     ->fields('commerce_order', array('order_id'))
@@ -1393,6 +856,4 @@ function _commerce_civicrm_count_customer_orders($customer) {
     ->execute()
     ->fetchField();
   return $count;
->>>>>>> e4b2f57... initial commit after upgrade
 }
-
