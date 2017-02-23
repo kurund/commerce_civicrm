@@ -208,7 +208,9 @@ function commerce_civicrm_commerce_payment_transaction_insert($transaction) {
  *   CiviCRM contact id
  */
 function commerce_civicrm_prefill_order_form_with_civi_data(&$form, &$form_state, $cid) {
-  civicrm_initialize();
+  if (!civicrm_initialize()) {
+    return;
+  }
 
   // Save the CiviCRM contact id onto the order.
   $form_state['commerce_order']->data['cid'] = $cid;
@@ -483,7 +485,7 @@ function _commerce_civicrm_update_contact($cid, $order) {
   }
 
   // Get the contact object from the contact id
-  $result = civicrm_api3('Contact', 'get', array('id' => $cid, 'version' => 3, 'sequential' => 1));
+  $result = civicrm_api3('Contact', 'get', array('id' => $cid, 'sequential' => 1));
   $contact = $result['values'][0];
 
   // Get customer profile information.
@@ -510,12 +512,8 @@ function _commerce_civicrm_update_contact($cid, $order) {
   // Prepare array to update contact via Civi API.
   $contact['last_name'] = $last_name;
   $contact['first_name'] = $first_name;
-  $contact['sort_name'] = "{$last_name}, {$first_name}";
-  $contact['display_name'] = $billing_address['first_name'] . ' ' . $billing_address['last_name'];
+
   $contact['email'] = _commerce_civicrm_get_mail_from_order($order);
-  if (empty($contact['source'])) {
-    $contact['source'] = t('Drupal Commerce purchase');
-  }
 
   // Update the contact object
   $contact['version'] = 3;
@@ -523,12 +521,21 @@ function _commerce_civicrm_update_contact($cid, $order) {
 
   $result = civicrm_api3('Contact', 'create', $contact);
 
+  // create / update  billing address for the contact
+  // check if contact has an address marked as is_billing = 1 before creating a new else update
+  $location_info = civicrm_api3('Address', 'get', array(
+    'sequential' => 1,
+    'contact_id' => $cid,
+    'is_billing' => 1,
+  ));
+
+  // retrieve corresponding country and state province ID's from CiviCRM
   $country_id = CRM_Core_DAO::getFieldValue("CRM_Core_DAO_Country", $billing_address['country'], 'id', 'iso_code');
   $state_province_id = CRM_Core_DAO::singleValueQuery("SELECT csp.id FROM civicrm_state_province AS csp LEFT JOIN civicrm_country AS cc ON (csp.country_id = cc.id) WHERE country_id = {$country_id} AND abbreviation = '{$billing_address['administrative_area']}'");
 
+  // build address params
   $address = array(
-    'location_type_id' => 5,
-    'is_primary' => TRUE,
+    'contact_id' => $cid,
     'city' => $billing_address['locality'],
     'state_province_id' => $state_province_id,
     'postal_code' => $billing_address['postal_code'],
@@ -537,31 +544,47 @@ function _commerce_civicrm_update_contact($cid, $order) {
     'country_id' => $country_id,
   );
 
+  // if billing address exist update it
+  if ($location_info['count'] > 0) {
+    $address['id'] = $location_info['values'][0]['id'];
+  }
+  else {
+    // set billing location type for new billing address
+    // TO DO: Move location type to admin configuration so that admin can configure it
+    $address['location_type_id'] = 5;
+    $address['is_billing'] = 1;
+  }
+
   // TODO Phone @see hook_commerce_civicrm_params() for example.
-
-  // Add / update the location.
-  $params = array('version' => '3.0', 'contact_id' => $cid) + $address;
-
   // Allow other modules to alter the data before being sent to CiviCRM.
   foreach (module_implements('commerce_civicrm_params') as $module) {
     $function = $module . '_commerce_civicrm_params';
-    $function($params, $order, $cid);
+    $function($address, $order, $cid);
   }
 
-  $new_location = civicrm_api3_address_create($params);
+  // finally create / update the address
+  $new_location = civicrm_api3_address_create($address);
 
   // Check if we have shipping information.
   if ($shipping_profile = $order_wrapper->commerce_customer_shipping->value()) {
     $shipping_profile_wrapper = entity_metadata_wrapper('commerce_customer_profile', $shipping_profile);
     $shipping_address = $shipping_profile_wrapper->commerce_customer_address->value();
 
+    // check if the address of type billing exits before creating a new else update
+    $location_info = civicrm_api3('Address', 'get', array(
+      'sequential' => 1,
+      'contact_id' => $cid,
+      'location_type_id' => 5,
+    ));
+
+    // retrieve corresponding country and state province ID's from CiviCRM
     $country_id = CRM_Core_DAO::getFieldValue("CRM_Core_DAO_Country", $shipping_address['country'], 'id', 'iso_code');
     $state_province_id = CRM_Core_DAO::singleValueQuery("SELECT csp.id FROM civicrm_state_province AS csp LEFT JOIN civicrm_country AS cc ON (csp.country_id = cc.id) WHERE country_id = {$country_id} AND abbreviation = '{$shipping_address['administrative_area']}'");
 
     // Shipping location.
     $address = array(
+      'contact_id' => $cid,
       'location_type_id' => 5,
-      'is_primary' => TRUE,
       'city' => $shipping_address['locality'],
       'state_province_id' => $state_province_id,
       'postal_code' => $shipping_address['postal_code'],
@@ -570,13 +593,18 @@ function _commerce_civicrm_update_contact($cid, $order) {
       'country_id' => $country_id,
     );
 
-    // Add / update the location.
-    $params = array('version' => '3.0', 'contact_id' => $cid) + $address;
-    $new_location = civicrm_api3_address_create($params);
-
-    if ($new_location['is_error'] && strpos($new_location['error_message'], "Invalid Location Type(s) : Home") !== FALSE) {
-      $new_location = civicrm_api3_address_create($params);
+    // if billing address exist update it
+    if ($location_info['count'] > 0) {
+      $address['id'] = $location_info['values'][0]['id'];
     }
+    else {
+      // set billing location type for new billing address
+      // TO DO: Move location type to admin configuration so that admin can configure it
+      $address['location_type_id'] = 5;
+    }
+
+    // Add / update the location.
+    $new_location = civicrm_api3_address_create($address);
   }
 
   // Log the error, but continue.
