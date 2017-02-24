@@ -500,7 +500,6 @@ function _commerce_civicrm_update_contact($cid, $order) {
 
   // If we have a full name field, split it.
   if (!empty($billing_address['name_line'])) {
-    $contact['display_name'] = $billing_address['name_line'];
     // Assumes user only has one first name and one surname... not ideal.
     $names = preg_split('/\s+/', $billing_address['name_line'], 2);
     $first_name = $names[0];
@@ -510,7 +509,6 @@ function _commerce_civicrm_update_contact($cid, $order) {
   else {
     $first_name = $billing_address['first_name'];
     $last_name = $billing_address['last_name'];
-    $contact['display_name'] = $first_name . ' ' . $last_name;
   }
 
   // Prepare array to update contact via Civi API.
