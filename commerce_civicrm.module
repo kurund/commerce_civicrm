@@ -306,7 +306,7 @@ function commerce_civicrm_admin() {
   // Get contribution types.
   // Note, no {} on table name because it's in civicrm db.
   $sql = "SELECT id, name FROM civicrm_financial_type WHERE is_active = 1";
-  $dao =& CRM_Core_DAO::executeQuery($sql, array());
+  $dao = CRM_Core_DAO::executeQuery($sql, array());
   $types = array(0 => t('Select a type...'));
   while ($dao->fetch()) {
     $types[$dao->id] = $dao->name;
