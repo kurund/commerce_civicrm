@@ -104,6 +104,7 @@ function commerce_civicrm_civicrm_links($op, $objectname, $objectId, &$links, &$
   // FIX ME
   // currently there is no way to open link in another window in CiviCRM for actions
   // below code is working and functional, but for now returning early
+  // here is the issue: https://issues.civicrm.org/jira/browse/CRM-20187
   return $links;
 
   // only call this contact summary
@@ -126,7 +127,8 @@ function commerce_civicrm_civicrm_links($op, $objectname, $objectId, &$links, &$
       case 'Contact':
         $links[] = array(
           'name' => ts('Add Store Order'),
-          //'title' => ts('Add Store Order'),
+          'title' => ts('Add Store Order'),
+          'class' => 'no-popup', // this class opens the link in new window instead of CiviCRM popup window
           'url' => $base_url . '/admin/commerce/orders/add/' . $uid . '?cid=' . $objectId,
         );
         break;
