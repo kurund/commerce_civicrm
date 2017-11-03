@@ -171,6 +171,9 @@ function commerce_civicrm_commerce_order_presave($order) {
     'checkout_complete',
     'checkout_payment',
     'pending',
+    'commerce_pos_in_progress',
+    'commerce_pos_voided',
+    'commerce_pos_parked',
   );
 
   if (!in_array($order->status, $statuses)) {
