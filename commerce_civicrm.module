@@ -101,12 +101,6 @@ function commerce_civicrm_menu() {
  * @return array
  */
 function commerce_civicrm_civicrm_links($op, $objectname, $objectId, &$links, &$mask, &$values) {
-  // FIX ME
-  // currently there is no way to open link in another window in CiviCRM for actions
-  // below code is working and functional, but for now returning early
-  // here is the issue: https://issues.civicrm.org/jira/browse/CRM-20187
-  return $links;
-
   // only call this contact summary
   $contact_actions = array(
     'view.contact.activity',
