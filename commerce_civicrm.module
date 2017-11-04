@@ -188,14 +188,9 @@ function commerce_civicrm_commerce_payment_transaction_insert($transaction) {
   $order = commerce_order_load($transaction->order_id);
   $cid = _commerce_civicrm_get_cid($order);
 
-  if (!$cid) {
-    $mail = _commerce_civicrm_get_mail_from_order($order);
-    $params = array('version' => 3, 'sequential' => 1, 'contact_type' => 'Individual', 'email' => $mail);
-    $result = civicrm_api3('Contact', 'create', $params);
-    $cid = $result['id'];
+  if (!empty($cid)) {
+    _commerce_civicrm_add_contribution($cid, $order, $transaction);
   }
-
-  _commerce_civicrm_add_contribution($cid, $order, $transaction);
 }
 
 
@@ -346,11 +341,10 @@ function commerce_civicrm_action_order_civicrm($order) {
 
   // Find or create a CiviCRM contact ID for the customer.
   $cid = _commerce_civicrm_get_cid($order);
-  if (!$cid) {
-    $mail = _commerce_civicrm_get_mail_from_order($order);
-    $params = array('version' => 3, 'sequential' => 1, 'contact_type' => 'Individual', 'email' => $mail);
-    $result = civicrm_api3('Contact', 'create', $params);
-    $cid = $result['id'];
+
+  // return early if no contact id is found
+  if (empty($cid)) {
+    return;
   }
 
   // Update the contact.
@@ -375,7 +369,6 @@ function _commerce_civicrm_get_mail_from_order($order) {
     $billing_profile_wrapper = entity_metadata_wrapper('commerce_customer_profile', $billing_profile);
     return $billing_profile_wrapper->field_email->value();
   }
-
 }
 
 /**
@@ -415,7 +408,7 @@ function _commerce_civicrm_add_to_groups($cid) {
  */
 function _commerce_civicrm_get_cid($order) {
   if (!civicrm_initialize()) {
-    return;
+    return FALSE;
   }
 
   require_once 'CRM/Core/BAO/UFMatch.php';
@@ -426,9 +419,18 @@ function _commerce_civicrm_get_cid($order) {
     return $order->data['cid'];
   }
 
+  // if user is logged in and user id is not set we should consider this as
+  // an anonymous user transaction and return early
+  $isUserLoggedIn = CRM_Utils_System::isUserLoggedIn();
+  if ($isUserLoggedIn && $order->uid == 0) {
+    return FALSE;
+  }
+
+  // get the email address of logged in contact or user associated with
+  // the order
   $mail = _commerce_civicrm_get_mail_from_order($order);
 
-  // Logged in user.
+  // if user id is set for logged in user then get his contact id
   if ($order->uid) {
     global $user;
     $match = CRM_Core_BAO_UFMatch::synchronizeUFMatch($user, $order->uid, $mail, 'Drupal', FALSE, 'Individual');
@@ -438,7 +440,7 @@ function _commerce_civicrm_get_cid($order) {
     return $match->contact_id;
   }
 
-  // Anonymous user.
+  // Anonymous user $order->uid = 0
   // Try to find a match based on email.
   $contact_search_results = civicrm_api3('Contact', 'get', array(
     'email' => $mail,
@@ -448,24 +450,39 @@ function _commerce_civicrm_get_cid($order) {
       'contact_source',
     )
   ));
+
   if (!empty($contact_search_results['is_error'])) {
     watchdog('commerce_civicrm', 'civicrm_api3_contact_get(): %error', array('%error' => $contact_search_results['error_message']), WATCHDOG_ERROR);
     return FALSE;
   }
 
+  $cid = 0;
   switch (count($contact_search_results['values'])) {
     case 0:
-      return 0;
+      $cid = 0;
+      break;
     case 1:
-      return $contact_search_results['id'];
+      $cid = $contact_search_results['id'];
+      break;
     default:
       foreach ($contact_search_results['values'] as $contact) {
         if ($contact['contact_source'] == t('Drupal Commerce purchase')) {
-          return $contact['contact_id'];
+          $cid = $contact['contact_id'];
         }
       }
-      return 0;
   }
+
+  // if the match is not found for an anonymous user email then, create new
+  // contact in CiviCRM
+  if (!$cid) {
+    $mail = _commerce_civicrm_get_mail_from_order($order);
+    $params = array('version' => 3, 'sequential' => 1, 'contact_type' => 'Individual', 'email' => $mail);
+    $result = civicrm_api3('Contact', 'create', $params);
+    $cid = $result['id'];
+  }
+
+  // finally return contact id
+  return $cid;
 }
 
 
@@ -479,45 +496,52 @@ function _commerce_civicrm_update_contact($cid, $order) {
     return;
   }
 
-  // Needed for civicrm_location_update
-  require_once 'api/v3/Address.php';
-
   // Ensure we have a contact
   if (!$cid) {
     return;
   }
 
   // Get the contact object from the contact id
-  $result = civicrm_api3('Contact', 'get', array('id' => $cid, 'sequential' => 1));
+  $result  = civicrm_api3('Contact', 'get', array(
+    'id'         => $cid,
+    'sequential' => 1
+  ));
   $contact = $result['values'][0];
 
   // Get customer profile information.
-  $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
-  $billing_profile = $order_wrapper->commerce_customer_billing->value();
+  $order_wrapper           = entity_metadata_wrapper('commerce_order', $order);
+  $billing_profile         = $order_wrapper->commerce_customer_billing->value();
   $billing_profile_wrapper = entity_metadata_wrapper('commerce_customer_profile', $billing_profile);
-  $billing_address = $billing_profile_wrapper->commerce_customer_address->value();
+  $billing_address         = $billing_profile_wrapper->commerce_customer_address->value();
+
+  // if all these 3 are empty we can assume nothing to udpate and return early
+  if (empty($billing_address['name_line'])
+      && empty($billing_address['first_name'])
+      && empty($billing_address['last_name'])) {
+    return;
+  }
 
   // If we have a full name field, split it.
   if (!empty($billing_address['name_line'])) {
     // Assumes user only has one first name and one surname... not ideal.
-    $names = preg_split('/\s+/', $billing_address['name_line'], 2);
+    $names      = preg_split('/\s+/', $billing_address['name_line'], 2);
     $first_name = $names[0];
-    $last_name = !empty($names[1]) ? $names[1] : '';
+    $last_name  = !empty($names[1]) ? $names[1] : '';
   }
   // Otherwise just pull out the first and last names.
   else {
     $first_name = $billing_address['first_name'];
-    $last_name = $billing_address['last_name'];
+    $last_name  = $billing_address['last_name'];
   }
 
-  // Prepare array to update contact via Civi API.
-  $contact['last_name'] = $last_name;
+  // prepare array to update contact via Civi API.
+  $contact['last_name']  = $last_name;
   $contact['first_name'] = $first_name;
 
   $contact['email'] = _commerce_civicrm_get_mail_from_order($order);
 
   // Update the contact object
-  $contact['version'] = 3;
+  $contact['version']    = 3;
   $contact['sequential'] = 1;
 
   $result = civicrm_api3('Contact', 'create', $contact);
@@ -531,8 +555,15 @@ function _commerce_civicrm_update_contact($cid, $order) {
   ));
 
   // retrieve corresponding country and state province ID's from CiviCRM
-  $country_id = CRM_Core_DAO::getFieldValue("CRM_Core_DAO_Country", $billing_address['country'], 'id', 'iso_code');
-  $state_province_id = CRM_Core_DAO::singleValueQuery("SELECT csp.id FROM civicrm_state_province AS csp LEFT JOIN civicrm_country AS cc ON (csp.country_id = cc.id) WHERE country_id = {$country_id} AND abbreviation = '{$billing_address['administrative_area']}'");
+  $country_id = $state_province_id = '';
+
+  if (!empty($billing_address['country'])) {
+    $country_id = CRM_Core_DAO::getFieldValue("CRM_Core_DAO_Country", $billing_address['country'], 'id', 'iso_code');
+
+    if (!empty($billing_address['administrative_area'])) {
+      $state_province_id = CRM_Core_DAO::singleValueQuery("SELECT csp.id FROM civicrm_state_province AS csp LEFT JOIN civicrm_country AS cc ON (csp.country_id = cc.id) WHERE country_id = {$country_id} AND abbreviation = '{$billing_address['administrative_area']}'");
+    }
+  }
 
   // build address params
   $address = array(
@@ -579,8 +610,13 @@ function _commerce_civicrm_update_contact($cid, $order) {
     ));
 
     // retrieve corresponding country and state province ID's from CiviCRM
-    $country_id = CRM_Core_DAO::getFieldValue("CRM_Core_DAO_Country", $shipping_address['country'], 'id', 'iso_code');
-    $state_province_id = CRM_Core_DAO::singleValueQuery("SELECT csp.id FROM civicrm_state_province AS csp LEFT JOIN civicrm_country AS cc ON (csp.country_id = cc.id) WHERE country_id = {$country_id} AND abbreviation = '{$shipping_address['administrative_area']}'");
+    if (!empty($billing_address['country'])) {
+      $country_id = CRM_Core_DAO::getFieldValue("CRM_Core_DAO_Country", $shipping_address['country'], 'id', 'iso_code');
+
+      if (!empty($billing_address['administrative_area'])) {
+        $state_province_id = CRM_Core_DAO::singleValueQuery("SELECT csp.id FROM civicrm_state_province AS csp LEFT JOIN civicrm_country AS cc ON (csp.country_id = cc.id) WHERE country_id = {$country_id} AND abbreviation = '{$shipping_address['administrative_area']}'");
+      }
+    }
 
     // Shipping location.
     $address = array(
