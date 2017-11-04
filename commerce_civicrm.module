@@ -22,7 +22,7 @@ function commerce_civicrm_help($path = 'admin/help#commerce_civicrm') {
  */
 function commerce_civicrm_views_api() {
   return array(
-    'api' => 3,
+    'api'  => 3,
     'path' => drupal_get_path('module', 'commerce_civicrm'),
   );
 }
@@ -45,12 +45,12 @@ function commerce_civicrm_civicrm_tabset($tabsetname, &$tabs, $context) {
   }
 
   $customer = user_load($uid);
-  $count = commerce_civicrm_display_contact_transactions($customer, TRUE);
+  $count    = commerce_civicrm_display_contact_transactions($customer, TRUE);
 
   $tab = array(
-    'id' => 'purchases',
-    'title' => t('Purchases'),
-    'count' => $count,
+    'id'     => 'purchases',
+    'title'  => t('Purchases'),
+    'count'  => $count,
     'weight' => 99,
   );
 
@@ -67,19 +67,19 @@ function commerce_civicrm_civicrm_tabset($tabsetname, &$tabs, $context) {
  */
 function commerce_civicrm_menu() {
   $items['civicrm/customer/orders/%user'] = array(
-    'title' => 'CiviCRM',
-    'page callback' => 'commerce_civicrm_display_contact_transactions',
-    'page arguments' => array(3),
+    'title'            => 'CiviCRM',
+    'page callback'    => 'commerce_civicrm_display_contact_transactions',
+    'page arguments'   => array(3),
     'access arguments' => array('view all contacts'),
-    'type' => MENU_CALLBACK,
+    'type'             => MENU_CALLBACK,
   );
   $items['admin/commerce/config/civicrm'] = array(
-    'title' => 'CiviCRM',
-    'description' => 'Configure Drupal Commerce and CiviCRM integration',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('commerce_civicrm_admin'),
+    'title'            => 'CiviCRM',
+    'description'      => 'Configure Drupal Commerce and CiviCRM integration',
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('commerce_civicrm_admin'),
     'access arguments' => array('configure store'),
-    'type' => MENU_NORMAL_ITEM,
+    'type'             => MENU_NORMAL_ITEM,
   );
 
   return $items;
@@ -113,17 +113,22 @@ function commerce_civicrm_civicrm_links($op, $objectname, $objectId, &$links, &$
 
   global $base_url;
   // Get the Drupal uid for the CiviCRM contact if there is a match
-  $params = array('contact_id' => $objectId, 'version' => 3, 'sequential' => 1);
+  $params   = array(
+    'contact_id' => $objectId,
+    'version'    => 3,
+    'sequential' => 1
+  );
   $uf_match = civicrm_api3('uf_match', 'get', $params);
   if (!empty($uf_match['id']) && count($uf_match['values']) == 1) {
     $uid = $uf_match['values'][0]['uf_id'];
     switch ($objectname) {
       case 'Contact':
         $links[] = array(
-          'name' => ts('Add Store Order'),
+          'name'  => ts('Add Store Order'),
           'title' => ts('Add Store Order'),
-          'class' => 'no-popup', // this class opens the link in new window instead of CiviCRM popup window
-          'url' => $base_url . '/admin/commerce/orders/add/' . $uid . '?cid=' . $objectId,
+          'class' => 'no-popup',
+          // this class opens the link in new window instead of CiviCRM popup window
+          'url'   => $base_url . '/admin/commerce/orders/add/' . $uid . '?cid=' . $objectId,
         );
         break;
     }
@@ -186,7 +191,7 @@ function commerce_civicrm_commerce_order_presave($order) {
  */
 function commerce_civicrm_commerce_payment_transaction_insert($transaction) {
   $order = commerce_order_load($transaction->order_id);
-  $cid = _commerce_civicrm_get_cid($order);
+  $cid   = _commerce_civicrm_get_cid($order);
 
   if (!empty($cid)) {
     _commerce_civicrm_add_contribution($cid, $order, $transaction);
@@ -211,8 +216,8 @@ function commerce_civicrm_prefill_order_form_with_civi_data(&$form, &$form_state
   $form_state['commerce_order']->data['cid'] = $cid;
 
   // Get the CiviCRM Contact object.
-  $params = array('id' => $cid, 'version' => 3, 'sequential' => 0);
-  $result = civicrm_api3('Contact', 'get', $params);
+  $params  = array('id' => $cid, 'version' => 3, 'sequential' => 0);
+  $result  = civicrm_api3('Contact', 'get', $params);
   $contact = $result['values'][$cid];
 
   // Set the order primary mail to the contacts email
@@ -225,14 +230,14 @@ function commerce_civicrm_prefill_order_form_with_civi_data(&$form, &$form_state
   $shipping_profile['field_email']['und'][0]['email']['#default_value'] = $contact['email'];
   // TODO make phone field configurable - relies on field being 'field_phone' currently.
   $shipping_profile['field_phone']['und'][0]['phone']['#default_value'] = $contact['phone'];
-  $shipping_address['street_block']['thoroughfare']['#value'] = $contact['street_address'];
-  $shipping_address['street_block']['premise']['#value'] = $contact['supplemental_address_1'];
-  $shipping_address['locality_block']['postal_code']['#value'] = $contact['postal_code'];
-  $shipping_address['locality_block']['administrative_area']['#value'] = $contact['state_province_name'];
-  $shipping_address['locality_block']['locality']['#value'] = $contact['city'];
-  $shipping_address['name_block']['name_line']['#value'] = $contact['display_name'];
+  $shipping_address['street_block']['thoroughfare']['#value']           = $contact['street_address'];
+  $shipping_address['street_block']['premise']['#value']                = $contact['supplemental_address_1'];
+  $shipping_address['locality_block']['postal_code']['#value']          = $contact['postal_code'];
+  $shipping_address['locality_block']['administrative_area']['#value']  = $contact['state_province_name'];
+  $shipping_address['locality_block']['locality']['#value']             = $contact['city'];
+  $shipping_address['name_block']['name_line']['#value']                = $contact['display_name'];
   // Add shipping_profile and shipping_address back into the form.
-  $shipping_profile['commerce_customer_address']['und'][0] = $shipping_address;
+  $shipping_profile['commerce_customer_address']['und'][0]  = $shipping_address;
   $form['commerce_customer_shipping']['und']['profiles'][0] = $shipping_profile;
 
   // Get the billing_profile and billing_address so we can work with them easier.
@@ -242,14 +247,14 @@ function commerce_civicrm_prefill_order_form_with_civi_data(&$form, &$form_state
   $billing_profile['field_email']['und'][0]['email']['#default_value'] = $contact['email'];
   // TODO make phone field configurable - relies on field being 'field_phone' currently.
   $billing_profile['field_phone']['und'][0]['value']['#default_value'] = $contact['phone'];
-  $billing_address['street_block']['thoroughfare']['#value'] = $contact['street_address'];
-  $billing_address['street_block']['premise']['#value'] = $contact['supplemental_address_1'];
-  $billing_address['locality_block']['postal_code']['#value'] = $contact['postal_code'];
-  $billing_address['locality_block']['administrative_area']['#value'] = $contact['state_province_name'];
-  $billing_address['locality_block']['locality']['#value'] = $contact['city'];
-  $billing_address['name_block']['name_line']['#value'] = $contact['display_name'];
+  $billing_address['street_block']['thoroughfare']['#value']           = $contact['street_address'];
+  $billing_address['street_block']['premise']['#value']                = $contact['supplemental_address_1'];
+  $billing_address['locality_block']['postal_code']['#value']          = $contact['postal_code'];
+  $billing_address['locality_block']['administrative_area']['#value']  = $contact['state_province_name'];
+  $billing_address['locality_block']['locality']['#value']             = $contact['city'];
+  $billing_address['name_block']['name_line']['#value']                = $contact['display_name'];
   // Add billing_profile and billing_address back into the form.
-  $billing_profile['commerce_customer_address']['und'][0] = $billing_address;
+  $billing_profile['commerce_customer_address']['und'][0]  = $billing_address;
   $form['commerce_customer_billing']['und']['profiles'][0] = $billing_profile;
 }
 
@@ -271,7 +276,7 @@ function commerce_civicrm_display_contact_transactions($customer, $count = FALSE
     return _commerce_civicrm_count_customer_orders($customer);
   }
 
-  $view = views_get_view('commerce_civicrm_orders_by_user');
+  $view   = views_get_view('commerce_civicrm_orders_by_user');
   $output = $view->execute_display('default', array($customer->uid));
   CRM_Core_Page_AJAX::returnJsonResponse($output);
 }
@@ -288,9 +293,9 @@ function commerce_civicrm_admin() {
   require_once 'CRM/Core/Config.php';
 
   $options = array();
-  $result = civicrm_api3('Group', 'get', array(
+  $result  = civicrm_api3('Group', 'get', array(
     'sequential' => 1,
-    'return' => array("id", "title"),
+    'return'     => array("id", "title"),
   ));
   foreach ($result['values'] as $group) {
     $options[$group['id']] = $group['title'];
@@ -299,28 +304,28 @@ function commerce_civicrm_admin() {
 
   // Get contribution types.
   // Note, no {} on table name because it's in civicrm db.
-  $sql = "SELECT id, name FROM civicrm_financial_type WHERE is_active = 1";
-  $dao = CRM_Core_DAO::executeQuery($sql, array());
+  $sql   = "SELECT id, name FROM civicrm_financial_type WHERE is_active = 1";
+  $dao   = CRM_Core_DAO::executeQuery($sql, array());
   $types = array(0 => t('Select a type...'));
   while ($dao->fetch()) {
     $types[$dao->id] = $dao->name;
   }
 
-  $form = array();
+  $form                                    = array();
   $form['commerce_civicrm_financial_type'] = array(
-    '#type' => 'select',
-    '#title' => t('Financial type'),
+    '#type'          => 'select',
+    '#title'         => t('Financial type'),
     '#default_value' => variable_get('commerce_civicrm_financial_type', array()),
-    '#options' => $types,
-    '#required' => TRUE,
-    '#description' => t('Select a financial type for purchases, making a new type with a name like "Drupal purchase" is recommended.'),
+    '#options'       => $types,
+    '#required'      => TRUE,
+    '#description'   => t('Select a financial type for purchases, making a new type with a name like "Drupal purchase" is recommended.'),
   );
 
   $form['commerce_civicrm_groups'] = array(
-    '#type' => 'checkboxes',
-    '#title' => t('Groups to add purchasers to'),
+    '#type'          => 'checkboxes',
+    '#title'         => t('Groups to add purchasers to'),
     '#default_value' => variable_get('commerce_civicrm_groups', array()),
-    '#options' => $options,
+    '#options'       => $options,
   );
 
   return system_settings_form($form);
@@ -402,6 +407,7 @@ function _commerce_civicrm_add_to_groups($cid) {
  *
  * @param $order
  *   Order
+ *
  * @return
  *   false|integer false   => an error occured
  *                 integer => CID if non-zero; must create if zero
@@ -443,9 +449,9 @@ function _commerce_civicrm_get_cid($order) {
   // Anonymous user $order->uid = 0
   // Try to find a match based on email.
   $contact_search_results = civicrm_api3('Contact', 'get', array(
-    'email' => $mail,
+    'email'   => $mail,
     'version' => 3,
-    'return' => array(
+    'return'  => array(
       'contact_id',
       'contact_source',
     )
@@ -475,10 +481,15 @@ function _commerce_civicrm_get_cid($order) {
   // if the match is not found for an anonymous user email then, create new
   // contact in CiviCRM
   if (!$cid) {
-    $mail = _commerce_civicrm_get_mail_from_order($order);
-    $params = array('version' => 3, 'sequential' => 1, 'contact_type' => 'Individual', 'email' => $mail);
+    $mail   = _commerce_civicrm_get_mail_from_order($order);
+    $params = array(
+      'version'      => 3,
+      'sequential'   => 1,
+      'contact_type' => 'Individual',
+      'email'        => $mail
+    );
     $result = civicrm_api3('Contact', 'create', $params);
-    $cid = $result['id'];
+    $cid    = $result['id'];
   }
 
   // finally return contact id
@@ -517,7 +528,8 @@ function _commerce_civicrm_update_contact($cid, $order) {
   // if all these 3 are empty we can assume nothing to udpate and return early
   if (empty($billing_address['name_line'])
       && empty($billing_address['first_name'])
-      && empty($billing_address['last_name'])) {
+      && empty($billing_address['last_name'])
+  ) {
     return;
   }
 
@@ -567,13 +579,13 @@ function _commerce_civicrm_update_contact($cid, $order) {
 
   // build address params
   $address = array(
-    'contact_id' => $cid,
-    'city' => $billing_address['locality'],
-    'state_province_id' => $state_province_id,
-    'postal_code' => $billing_address['postal_code'],
-    'street_address' => $billing_address['thoroughfare'],
+    'contact_id'             => $cid,
+    'city'                   => $billing_address['locality'],
+    'state_province_id'      => $state_province_id,
+    'postal_code'            => $billing_address['postal_code'],
+    'street_address'         => $billing_address['thoroughfare'],
     'supplemental_address_1' => $billing_address['premise'],
-    'country_id' => $country_id,
+    'country_id'             => $country_id,
   );
 
   // if billing address exist update it
@@ -584,7 +596,7 @@ function _commerce_civicrm_update_contact($cid, $order) {
     // set billing location type for new billing address
     // TO DO: Move location type to admin configuration so that admin can configure it
     $address['location_type_id'] = 5;
-    $address['is_billing'] = 1;
+    $address['is_billing']       = 1;
   }
 
   // TODO Phone @see hook_commerce_civicrm_params() for example.
@@ -600,12 +612,12 @@ function _commerce_civicrm_update_contact($cid, $order) {
   // Check if we have shipping information.
   if ($shipping_profile = $order_wrapper->commerce_customer_shipping->value()) {
     $shipping_profile_wrapper = entity_metadata_wrapper('commerce_customer_profile', $shipping_profile);
-    $shipping_address = $shipping_profile_wrapper->commerce_customer_address->value();
+    $shipping_address         = $shipping_profile_wrapper->commerce_customer_address->value();
 
     // check if the address of type billing exits before creating a new else update
     $location_info = civicrm_api3('Address', 'get', array(
-      'sequential' => 1,
-      'contact_id' => $cid,
+      'sequential'       => 1,
+      'contact_id'       => $cid,
       'location_type_id' => 5,
     ));
 
@@ -620,14 +632,14 @@ function _commerce_civicrm_update_contact($cid, $order) {
 
     // Shipping location.
     $address = array(
-      'contact_id' => $cid,
-      'location_type_id' => 5,
-      'city' => $shipping_address['locality'],
-      'state_province_id' => $state_province_id,
-      'postal_code' => $shipping_address['postal_code'],
-      'street_address' => $shipping_address['thoroughfare'],
+      'contact_id'             => $cid,
+      'location_type_id'       => 5,
+      'city'                   => $shipping_address['locality'],
+      'state_province_id'      => $state_province_id,
+      'postal_code'            => $shipping_address['postal_code'],
+      'street_address'         => $shipping_address['thoroughfare'],
       'supplemental_address_1' => $shipping_address['premise'],
-      'country_id' => $country_id,
+      'country_id'             => $country_id,
     );
 
     // if billing address exist update it
@@ -670,39 +682,39 @@ function _commerce_civicrm_create_custom_contribution_fields() {
   // already been created.
   $params = array(
 
-    'title' => 'Drupal Commerce Purchases',
-    'name' => 'commerce_purchases',
-    'extends' => array('Contribution'),
-    'weight' => 1,
+    'title'            => 'Drupal Commerce Purchases',
+    'name'             => 'commerce_purchases',
+    'extends'          => array('Contribution'),
+    'weight'           => 1,
     'collapse_display' => 0,
-    'is_active' => 1,
+    'is_active'        => 1,
   );
 
   $custom_group = civicrm_api3('CustomGroup', 'create', $params);
   variable_set('commerce_civicrm_contribution_group_id', $custom_group['id']);
 
-  $params = array(
+  $params    = array(
     'custom_group_id' => $custom_group['id'],
-    'label' => 'Sales Tax',
-    'html_type' => 'Text',
-    'data_type' => 'String',
-    'weight' => 1,
-    'is_required' => 0,
-    'is_searchable' => 0,
-    'is_active' => 1,
+    'label'           => 'Sales Tax',
+    'html_type'       => 'Text',
+    'data_type'       => 'String',
+    'weight'          => 1,
+    'is_required'     => 0,
+    'is_searchable'   => 0,
+    'is_active'       => 1,
   );
   $tax_field = civicrm_api3('CustomField', 'create', $params);
   variable_set('commerce_civicrm_tax_field_id', $tax_field['id']);
 
-  $params = array(
+  $params         = array(
     'custom_group_id' => $custom_group['id'],
-    'label' => 'Shipping Cost',
-    'html_type' => 'Text',
-    'data_type' => 'String',
-    'weight' => 2,
-    'is_required' => 0,
-    'is_searchable' => 0,
-    'is_active' => 1,
+    'label'           => 'Shipping Cost',
+    'html_type'       => 'Text',
+    'data_type'       => 'String',
+    'weight'          => 2,
+    'is_required'     => 0,
+    'is_searchable'   => 0,
+    'is_active'       => 1,
   );
   $shipping_field = civicrm_api3('CustomField', 'create', $params);
   variable_set('commerce_civicrm_shipping_field_id', $shipping_field['id']);
@@ -750,16 +762,16 @@ function _commerce_civicrm_add_contribution($cid, $order, $transaction) {
   }
 
   $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
-  $total = $order_wrapper->commerce_order_total->amount->value();
+  $total         = $order_wrapper->commerce_order_total->amount->value();
 
-  $tax_field_id = variable_get('commerce_civicrm_tax_field_id', '');
+  $tax_field_id      = variable_get('commerce_civicrm_tax_field_id', '');
   $shipping_field_id = variable_get('commerce_civicrm_shipping_field_id', '');
-  $transaction_tax = 0;
+  $transaction_tax   = 0;
 
   // Get the proportion of tax applied to this transaction.
   if (module_exists('commerce_tax')) {
-    $components = $order_wrapper->commerce_order_total->data->value();
-    $tax_total = commerce_tax_total_amount($components['components'], TRUE, commerce_default_currency()) / 100;
+    $components      = $order_wrapper->commerce_order_total->data->value();
+    $tax_total       = commerce_tax_total_amount($components['components'], TRUE, commerce_default_currency()) / 100;
     $transaction_tax = $tax_total * $transaction->amount / $total;
   }
 
@@ -769,20 +781,20 @@ function _commerce_civicrm_add_contribution($cid, $order, $transaction) {
   $total_amount = $total / 100;
 
   $params = array(
-    'version' => 3,
-    'contact_id' => $cid,
-    'total_amount' => $total_amount,
-    'financial_type_id' => variable_get('commerce_civicrm_financial_type', ''),
+    'version'                => 3,
+    'contact_id'             => $cid,
+    'total_amount'           => $total_amount,
+    'financial_type_id'      => variable_get('commerce_civicrm_financial_type', ''),
     // @FIXME this needs a sensible default
-    'payment_instrument_id' => _commerce_civicrm_map_payment_instrument($transaction->payment_method),
-    'non_deductible_amount' => 00.00,
-    'fee_amount' => 00.00,
-    'net_amount' => $total_amount,
-    'trxn_id' => $transaction->transaction_id . '_dc',
-    'invoice_id' => $transaction->transaction_id . '_dc',
-    'source' => variable_get('commerce_civicrm_source_name', 'Drupal Commerce'),
+    'payment_instrument_id'  => _commerce_civicrm_map_payment_instrument($transaction->payment_method),
+    'non_deductible_amount'  => 00.00,
+    'fee_amount'             => 00.00,
+    'net_amount'             => $total_amount,
+    'trxn_id'                => $transaction->transaction_id . '_dc',
+    'invoice_id'             => $transaction->transaction_id . '_dc',
+    'source'                 => variable_get('commerce_civicrm_source_name', 'Drupal Commerce'),
     'contribution_status_id' => _commerce_civicrm_map_contribution_status($transaction->status),
-    'note' => _commerce_civicrm_create_detail_string($order_wrapper),
+    'note'                   => _commerce_civicrm_create_detail_string($order_wrapper),
   );
 
   if (!empty($tax_field_id)) {
@@ -808,12 +820,12 @@ function _commerce_civicrm_add_contribution($cid, $order, $transaction) {
 }
 
 
-
 /**
  * Maps a Drupal Commerce payment method to a CiviCRM payment instrument.
  *
  * @param string $payment_method
  *    A Drupal Commerce payment method
+ *
  * @return int
  *    The CiviCRM id of the payment processor
  */
@@ -821,10 +833,10 @@ function _commerce_civicrm_map_payment_instrument($payment_method) {
 
   // TODO add support for other payment processors.
   $map = array(
-    'credit' => 1,
+    'credit'           => 1,
     'commerce_sagepay' => 1,
-    'commerce_cheque' => 2,
-    'cod' => 4,
+    'commerce_cheque'  => 2,
+    'cod'              => 4,
   );
 
   if (array_key_exists($payment_method, $map)) {
@@ -844,6 +856,7 @@ function _commerce_civicrm_map_payment_instrument($payment_method) {
  *
  * @param string $transaction_status
  *    A Drupal Commerce order status
+ *
  * @return int
  *    A CiviCRM order status
  */
@@ -872,7 +885,7 @@ function _commerce_civicrm_map_contribution_status($transaction_status) {
  * Create string to insert for purchase activity details.
  */
 function _commerce_civicrm_create_detail_string($order_wrapper) {
-  $str = '';
+  $str    = '';
   $titles = array();
 
   // Populate the array of the quantities of the products on the order.
@@ -880,13 +893,13 @@ function _commerce_civicrm_create_detail_string($order_wrapper) {
     if (in_array($line_item_wrapper->type->value(), commerce_product_line_item_types())) {
       // Extract a product ID and quantity from the line item.
       $line_item_sku = $line_item_wrapper->commerce_product->sku->value();
-      $quantity = $line_item_wrapper->quantity->value();
-      $title = $line_item_wrapper->commerce_product->title->value();
+      $quantity      = $line_item_wrapper->quantity->value();
+      $title         = $line_item_wrapper->commerce_product->title->value();
 
       // Update the product's quantity value.
       if (empty($products[$line_item_sku])) {
         $products[$line_item_sku] = $quantity;
-        $titles[$title] = $quantity;
+        $titles[$title]           = $quantity;
       }
       else {
         $products[$line_item_sku] += $quantity;
