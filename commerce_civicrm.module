@@ -762,7 +762,7 @@ function _commerce_civicrm_add_contribution($cid, $order, $transaction) {
   }
 
   $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
-  $total         = $order_wrapper->commerce_order_total->amount->value();
+  $total         = $transaction->amount;
 
   $tax_field_id      = variable_get('commerce_civicrm_tax_field_id', '');
   $shipping_field_id = variable_get('commerce_civicrm_shipping_field_id', '');
