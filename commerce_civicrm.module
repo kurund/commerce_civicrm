@@ -173,6 +173,7 @@ function commerce_civicrm_commerce_order_presave($order) {
     'commerce_pos_in_progress',
     'commerce_pos_voided',
     'commerce_pos_parked',
+    'canceled',
   );
 
   if (!in_array($order->status, $statuses)) {
